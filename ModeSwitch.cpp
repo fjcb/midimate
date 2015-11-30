@@ -2,8 +2,8 @@
 #include "ModeSwitch.h"
 
 ModeSwitch::ModeSwitch(int analogPin, int numModes)
+ : m_analogPin(analogPin)
 {
-	m_analogPin = analogPin;
 	m_numModes = max(1, numModes);
 	m_step = ANALOG_MAX / numModes;
 }

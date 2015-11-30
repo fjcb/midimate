@@ -1,5 +1,7 @@
-#include <Bounce2.h>
 #include "ModeSwitch.h"
+#include "FootSwitch.h"
+#include "MidiManager.h"
+#include "StateListener.h"
 
 #define DEBUG
 
@@ -18,9 +20,12 @@ int velocity = 0x45;
 boolean holding = false;
 int octaves = 2;
 
-Bounce footBouncer = Bounce();
 ModeSwitch octaveModeSwitch = ModeSwitch(octavePotPin, 6);
 ModeSwitch noteModeSwitch = ModeSwitch(notePotPin, 6);
+FootSwitch footSwitchManager = FootSwitch(footSwitchPin);
+StateListener stateListener = StateListener();
+MidiManager midiManager = MidiManager();
+
 
 void setup()
 {
@@ -28,10 +33,9 @@ void setup()
   pinMode(footSwitchPin, INPUT);
   pinMode(modeSwitchPin, INPUT);
 
-  footBouncer.attach(footSwitchPin);
-  footBouncer.interval(10);
-
   attachInterrupt(digitalPinToInterrupt(footSwitchPin), footSwitch, CHANGE);
+
+  midiManager.setStateListener(stateListener);
 
 #ifdef DEBUG
   Serial.begin(9600);
@@ -42,7 +46,7 @@ void setup()
 
 void loop()
 {
-#ifdef DEBUG2
+#ifdef DEBUG
   Serial.print("Foot = ");
   Serial.print(digitalRead(footSwitchPin));
   Serial.print("\t Switch = ");
@@ -67,46 +71,22 @@ void loop()
 
 void footSwitch()
 {
-  //footBouncer.update();
-  
 #ifdef DEBUG
   Serial.print("down \n");
   Serial.print(digitalRead(footSwitchPin));
 #endif
+
+  footSwitchManager.update();
   
   digitalWrite(ledPin, digitalRead(footSwitchPin));
 }
 
-void sendNote(int cmd, int note, int vel)
-{
-#ifndef DEBUG
-  Serial.write(cmd);
-  Serial.write(note);
-  Serial.write(vel);
-#endif
-}
 
-void stopNotes(int cmd)
-{
-  holding = false;
-  digitalWrite(ledPin, LOW);
-  
-  for(int i = 0; i < 4; i++)
-  {
-    sendNote(cmd, bs[i], 0x00);
-    sendNote(cmd, es[i], 0x00);
-  }
-}
 
-void playNotes(int cmd, int noteArray[])
+void ledStateCallBack(bool state)
 {
-  for(int i = 0; i < octaves; i++)
-  {
-    sendNote(cmd, noteArray[i], velocity);
-  }
-  digitalWrite(ledPin, HIGH);
+  digitalWrite(ledPin, state);
 }
-
 
 
 
