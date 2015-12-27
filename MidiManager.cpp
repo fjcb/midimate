@@ -20,15 +20,14 @@ void MidiManager::sendNote(int cmd, int note, int vel)
 #endif
 }
 
-void MidiManager::stopNotes(int cmd)
+void MidiManager::stopNotes(int cmd, int noteArray[])
 {
   //holding = false;
   notifyStateListener(LOW);
   
   for(int i = 0; i < 4; i++)
   {
-    //sendNote(cmd, bs[i], 0x00);
-    //sendNote(cmd, es[i], 0x00);
+    sendNote(cmd, noteArray[i], 0x00);
   }
 }
 
@@ -40,4 +39,10 @@ void MidiManager::playNotes(int cmd, int noteArray[])
   }
   notifyStateListener(HIGH);
 }
+
+void MidiManager::notifyStateListener(bool state)
+{
+
+}
+
 

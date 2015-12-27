@@ -22,7 +22,7 @@ int octaves = 2;
 
 ModeSwitch octaveModeSwitch = ModeSwitch(octavePotPin, 6);
 ModeSwitch noteModeSwitch = ModeSwitch(notePotPin, 6);
-FootSwitch footSwitchManager = FootSwitch(footSwitchPin);
+FootSwitch footSwitchManager = FootSwitch(footSwitchPin, modeSwitchPin);
 StateListener stateListener = StateListener();
 MidiManager midiManager = MidiManager();
 
@@ -46,7 +46,7 @@ void setup()
 
 void loop()
 {
-#ifdef DEBUG
+#ifdef DEBUG1
   Serial.print("Foot = ");
   Serial.print(digitalRead(footSwitchPin));
   Serial.print("\t Switch = ");
@@ -65,20 +65,43 @@ void loop()
 #endif 
   
 
-  delay(3);
-  
+  delay(10);  
 }
 
+int run_counter = 0;
 void footSwitch()
 {
-#ifdef DEBUG
-  Serial.print("down \n");
-  Serial.print(digitalRead(footSwitchPin));
-#endif
-
   footSwitchManager.update();
-  
-  digitalWrite(ledPin, digitalRead(footSwitchPin));
+
+  if(footSwitchManager.stateChanged())
+  {
+#ifdef DEBUG
+  Serial.print("changed ");
+  Serial.print(footSwitchManager.getState());
+  Serial.print("\n");
+#endif
+    if(digitalRead(modeSwitchPin))
+    {
+      //touch mode
+      Serial.print("Touch\n");
+      digitalWrite(ledPin, footSwitchManager.getState());
+    }
+    else
+    {
+      //toggle mode
+      Serial.print("Toggle\n");
+      run_counter++;
+      if(run_counter <= 3)
+      {
+        digitalWrite(ledPin, HIGH);
+      }
+      else
+      {
+        digitalWrite(ledPin, LOW);
+        run_counter = 0;
+      }
+    }
+  }
 }
 
 
