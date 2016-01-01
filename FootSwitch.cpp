@@ -4,6 +4,9 @@
 FootSwitch::FootSwitch(int input_pin, int mode_pin)
  : m_input_pin(input_pin)
  , m_mode_pin(mode_pin)
+ , m_state(LOW)
+ , m_last_state(LOW)
+ , m_counter(0)
  , m_last_micros(micros())
 {
 
@@ -39,8 +42,26 @@ bool FootSwitch::stateChanged()
   }
 }
 
-int FootSwitch::getState()
+int FootSwitch::triggered()
 {
-  return m_state;
+  if(digitalRead(m_mode_pin))
+  {
+    //touch mode
+    return m_state;
+  }
+  else
+  {
+    //toggle mode
+    m_counter++;
+    if(m_counter <= 3)
+    {
+      return HIGH;
+    }
+    else
+    {
+      m_counter = 0;
+      return LOW;    
+    }
+  }
 }
 

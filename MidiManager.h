@@ -7,13 +7,12 @@
 class MidiManager
 {
 public:
-	MidiManager();
-  void setStateListener(StateListener stateListener);
-  void playNotes(int cmd, int* notes);
-  void stopNotes(int cmd, int* notes);
+	MidiManager(StateListener stateListener);
+  void playNotes(const int* octaves, const int* notes, int velocity);
+  void stopNotes(const int* octaves, const int* notes);
 private:
   void sendNote(int cmd, int note, int velocity);
-  void notifyStateListener(bool state);
+  void notifyStateListener(int state);
   StateListener m_stateListener;
 };
 

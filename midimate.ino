@@ -5,6 +5,7 @@
 
 #define DEBUG
 
+//pins
 const int ledPin = 4;
 const int footSwitchPin = 2;
 const int modeSwitchPin = 3;
@@ -13,19 +14,30 @@ const int octavePotPin = A0;
 const int notePotPin = A1;
 const int expPedalPin = A2;
 
-//low b and e, additional octaves
-int bs[] = {47, 59, 71, 83};
-int es[] = {52, 64, 76, 88};
-int velocity = 0x45;
-boolean holding = false;
-int octaves = 2;
+//midi notes and octaves
+const int notes[6][6] = { 
+  {40, 52, 64, 76, 88, 100},  //b
+  {33, 45, 57, 69, 81, 93},   //e
+  {33, 45, 57, 69, 81, 93},   //a
+  {38, 50, 62, 74, 86, 98},   //d
+  {43, 55, 67, 79, 91, 103},  //g
+  {36, 48, 60 ,72, 84, 96}    //c
+ };
+const int octaves[6][2] = {   //1. start idx, 2. end idx
+  {0, 1},   
+  {0, 2},
+  {0, 3},
+  {2, 5},
+  {3, 5},
+  {4, 5}
+ };
+int velocity = 0x78;
 
 ModeSwitch octaveModeSwitch = ModeSwitch(octavePotPin, 6);
 ModeSwitch noteModeSwitch = ModeSwitch(notePotPin, 6);
 FootSwitch footSwitchManager = FootSwitch(footSwitchPin, modeSwitchPin);
-StateListener stateListener = StateListener();
-MidiManager midiManager = MidiManager();
-
+StateListener stateListener = StateListener(ledPin);
+MidiManager midiManager = MidiManager(stateListener);
 
 void setup()
 {
@@ -34,8 +46,6 @@ void setup()
   pinMode(modeSwitchPin, INPUT);
 
   attachInterrupt(digitalPinToInterrupt(footSwitchPin), footSwitch, CHANGE);
-
-  midiManager.setStateListener(stateListener);
 
 #ifdef DEBUG
   Serial.begin(9600);
@@ -64,52 +74,36 @@ void loop()
   Serial.print("\n");
 #endif 
   
-
-  delay(10);  
+  delay(100);  
 }
 
-int run_counter = 0;
+int played_octaves_idx = 0;
+int played_notes_idx = 0;
+
 void footSwitch()
 {
   footSwitchManager.update();
 
   if(footSwitchManager.stateChanged())
   {
-#ifdef DEBUG
-  Serial.print("changed ");
-  Serial.print(footSwitchManager.getState());
-  Serial.print("\n");
-#endif
-    if(digitalRead(modeSwitchPin))
+    #ifdef DEBUG
+    Serial.print("footswitch state changed\n");
+    #endif
+
+    if(footSwitchManager.triggered())
     {
-      //touch mode
-      Serial.print("Touch\n");
-      digitalWrite(ledPin, footSwitchManager.getState());
+      //play notes
+      played_octaves_idx = octaveModeSwitch.getMode();
+      played_notes_idx = noteModeSwitch.getMode();
+      
+      midiManager.playNotes(octaves[played_octaves_idx], notes[played_notes_idx], velocity);
     }
     else
     {
-      //toggle mode
-      Serial.print("Toggle\n");
-      run_counter++;
-      if(run_counter <= 3)
-      {
-        digitalWrite(ledPin, HIGH);
-      }
-      else
-      {
-        digitalWrite(ledPin, LOW);
-        run_counter = 0;
-      }
+      //stop notes
+      midiManager.stopNotes(octaves[played_octaves_idx], notes[played_notes_idx]);
     }
   }
 }
-
-
-
-void ledStateCallBack(bool state)
-{
-  digitalWrite(ledPin, state);
-}
-
 
 

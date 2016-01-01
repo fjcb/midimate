@@ -1,48 +1,46 @@
 #include "Arduino.h"
 #include "MidiManager.h"
 
-MidiManager::MidiManager()
+MidiManager::MidiManager(StateListener stateListener)
+ : m_stateListener(stateListener)
 {
 
-}
-
-void MidiManager::setStateListener(StateListener stateListener)
-{
-  m_stateListener = stateListener;
 }
 
 void MidiManager::sendNote(int cmd, int note, int vel)
 {
-#ifndef DEBUG
+#ifdef DEBUG
+  Serial.print("Midi Output");
+#else
   Serial.write(cmd);
   Serial.write(note);
   Serial.write(vel);
 #endif
 }
 
-void MidiManager::stopNotes(int cmd, int noteArray[])
-{
-  //holding = false;
-  notifyStateListener(LOW);
+void MidiManager::playNotes(const int octaves[], const int notes[], int velocity)
+{ 
+  for(int i = octaves[0]; i <= octaves[1]; i++)
+  {
+    sendNote(0x90, notes[i], velocity);
+  }
   
-  for(int i = 0; i < 4; i++)
-  {
-    sendNote(cmd, noteArray[i], 0x00);
-  }
-}
-
-void MidiManager::playNotes(int cmd, int noteArray[])
-{
-  for(int i = 0; i < 4; i++)
-  {
-    sendNote(cmd, noteArray[i], 0x45);
-  }
   notifyStateListener(HIGH);
 }
 
-void MidiManager::notifyStateListener(bool state)
+void MidiManager::stopNotes(const int octaves[], const int notes[])
 {
+  notifyStateListener(LOW);
+  
+  for(int i = octaves[0]; i <= octaves[1]; i++)
+  {
+    sendNote(0x90, notes[i], 0x00);
+  }
+}
 
+void MidiManager::notifyStateListener(int state)
+{
+  m_stateListener.onChange(state);
 }
 
 

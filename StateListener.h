@@ -6,9 +6,10 @@
 class StateListener
 {
 public:
-	StateListener();
-  void onChange(bool state);
+	StateListener(int ledPin);
+  void onChange(int state);
 private:
+  int m_ledPin;
 
 };
 
