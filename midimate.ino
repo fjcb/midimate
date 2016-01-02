@@ -3,13 +3,14 @@
 #include "MidiManager.h"
 #include "StateListener.h"
 
-#define DEBUG
+//#define DEBUG
 
-//pins
+//digital pins
 const int ledPin = 4;
 const int footSwitchPin = 2;
 const int modeSwitchPin = 3;
 
+//analog pins
 const int octavePotPin = A0;
 const int notePotPin = A1;
 const int expPedalPin = A2;
@@ -45,7 +46,7 @@ void setup()
   pinMode(footSwitchPin, INPUT);
   pinMode(modeSwitchPin, INPUT);
 
-  attachInterrupt(digitalPinToInterrupt(footSwitchPin), footSwitch, CHANGE);
+  //attachInterrupt(digitalPinToInterrupt(footSwitchPin), footSwitch, CHANGE);
 
 #ifdef DEBUG
   Serial.begin(9600);
@@ -73,8 +74,10 @@ void loop()
   Serial.print(analogRead(expPedalPin));
   Serial.print("\n");
 #endif 
+
+  footSwitch();
   
-  delay(100);  
+  delay(5);  
 }
 
 int played_octaves_idx = 0;
@@ -82,26 +85,30 @@ int played_notes_idx = 0;
 
 void footSwitch()
 {
-  footSwitchManager.update();
-
   if(footSwitchManager.stateChanged())
   {
     #ifdef DEBUG
     Serial.print("footswitch state changed\n");
     #endif
 
-    if(footSwitchManager.triggered())
+    int trigger = footSwitchManager.triggered();
+    
+    if(trigger == HIGH)
     {
       //play notes
       played_octaves_idx = octaveModeSwitch.getMode();
       played_notes_idx = noteModeSwitch.getMode();
       
       midiManager.playNotes(octaves[played_octaves_idx], notes[played_notes_idx], velocity);
+
+      Serial.print("triggered play notes\n");
     }
-    else
+    
+    if(trigger == LOW)
     {
       //stop notes
       midiManager.stopNotes(octaves[played_octaves_idx], notes[played_notes_idx]);
+      Serial.print("triggered stop notes\n");
     }
   }
 }
