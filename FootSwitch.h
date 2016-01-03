@@ -4,6 +4,10 @@
 #include "Arduino.h"
 #include <Bounce2.h>
 
+#define START 1
+#define STOP 0
+#define HOLD 2
+
 class FootSwitch
 {
 public:

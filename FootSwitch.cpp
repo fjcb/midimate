@@ -30,25 +30,32 @@ int FootSwitch::triggered()
   if(digitalRead(m_mode_pin))
   {
     //touch mode
-    return m_state;
+    if(m_state == HIGH)
+    {
+      return START;
+    }
+    else
+    {
+      return STOP;
+    }
   }
   else
   {
     //toggle mode
-    int result = 2; //no change result
+    int result = HOLD; //no change result
 
     if(m_state == HIGH)
     {
       if(m_playing)
       {
         //stop
-        result = LOW;
+        result = STOP;
         m_playing = false;
       }
       else
       {
         //start
-        result = HIGH;
+        result = START;
         m_playing = true;
       }    
     }

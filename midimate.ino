@@ -17,20 +17,20 @@ const int expPedalPin = A2;
 
 //midi notes and octaves
 const int notes[6][6] = { 
-  {40, 52, 64, 76, 88, 100},  //b
-  {33, 45, 57, 69, 81, 93},   //e
+  {35, 47, 59, 71, 83, 95},   //b
+  {40, 52, 64, 76, 88, 100},  //e
   {33, 45, 57, 69, 81, 93},   //a
   {38, 50, 62, 74, 86, 98},   //d
   {43, 55, 67, 79, 91, 103},  //g
   {36, 48, 60 ,72, 84, 96}    //c
  };
 const int octaves[6][2] = {   //1. start idx, 2. end idx
-  {0, 1},   
-  {0, 2},
-  {0, 3},
-  {2, 5},
-  {3, 5},
-  {4, 5}
+  {0, 3},   
+  {1, 3},
+  {1, 4},
+  {2, 3},
+  {2, 4},
+  {2, 5}
  };
 int velocity = 0x78;
 
@@ -57,7 +57,7 @@ void setup()
 
 void loop()
 {
-#ifdef DEBUG1
+#ifdef DEBUG
   Serial.print("Foot = ");
   Serial.print(digitalRead(footSwitchPin));
   Serial.print("\t Switch = ");
@@ -76,7 +76,6 @@ void loop()
 #endif 
 
   footSwitch();
-  
   delay(5);  
 }
 
@@ -87,30 +86,36 @@ void footSwitch()
 {
   if(footSwitchManager.stateChanged())
   {
-    #ifdef DEBUG
-    Serial.print("footswitch state changed\n");
-    #endif
+    print("footswitch state changed\n");
 
-    int trigger = footSwitchManager.triggered();
-    
-    if(trigger == HIGH)
+    switch(footSwitchManager.triggered())
     {
-      //play notes
-      played_octaves_idx = octaveModeSwitch.getMode();
-      played_notes_idx = noteModeSwitch.getMode();
-      
-      midiManager.playNotes(octaves[played_octaves_idx], notes[played_notes_idx], velocity);
-
-      Serial.print("triggered play notes\n");
-    }
-    
-    if(trigger == LOW)
-    {
-      //stop notes
-      midiManager.stopNotes(octaves[played_octaves_idx], notes[played_notes_idx]);
-      Serial.print("triggered stop notes\n");
+      case START: 
+          //play notes
+          played_octaves_idx = octaveModeSwitch.getMode();
+          played_notes_idx = noteModeSwitch.getMode();    
+          midiManager.playNotes(octaves[played_octaves_idx], notes[played_notes_idx], velocity);
+          
+          print("  triggered play notes");
+        break;
+      case STOP: 
+          //stop notes
+          midiManager.stopNotes(octaves[played_octaves_idx], notes[played_notes_idx]);
+          print("  triggered stop notes");
+        break;
+      case HOLD: 
+          print("  triggered hold notes");
+        break;
     }
   }
+}
+
+void print(String msg)
+{
+  #ifdef DEBUG
+  Serial.print(msg);
+  Serial.print("\n");
+  #endif
 }
 
 
